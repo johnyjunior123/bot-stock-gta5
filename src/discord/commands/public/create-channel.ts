@@ -1,9 +1,9 @@
 import { createCommand } from "#base";
 import { ApplicationCommandOptionType, ApplicationCommandType, ChannelType, PermissionsBitField } from "discord.js";
 
-const CATEGORY_ID = "1461686438193008836";
-const GERENTE_ROLE_ID = "1461686213055610941";
-const ADMIN_ROLE_ID = "1461321707007770637";
+const CATEGORY_ID = "1462481693184102633";
+const GERENTE_ROLE_ID = "1458557122068611246";
+const ADMIN_ROLE_ID = "1458557122068611246";
 
 createCommand({
 	name: "criar-canal-farm",
