@@ -1,0 +1,25 @@
+enum FarmStatus {
+    PENDING
+    APPROVED
+    REFUSED
+}
+
+model Farm {
+    id            Int        @id @default(autoincrement())
+    metal         Int        @default(0)
+    rubber        Int        @default(0)
+    copper        Int        @default(0)
+    plastic       Int        @default(0)
+    glass         Int        @default(0)
+    pieceWeapon   Int        @default(0)
+    pistolPiece   Int        @default(0)
+    dirtyMoney    Int        @default(0)
+    status        FarmStatus @default(PENDING)
+    member        Member     @relation(fields: [memberId, memberGuildId], references: [id, guildId])
+    createdAt     DateTime   @default(now())
+    updatedAt     DateTime   @updatedAt
+    memberId      String
+    memberGuildId String
+
+    @@map("farms")
+}
