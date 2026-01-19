@@ -20,3 +20,5 @@
 *.exe
 *.db
 *.development.json
+src/database/prisma
+.prisma
