@@ -64,5 +64,7 @@ createCommand({
 			ephemeral: true,
 			content: `✅ Canal de farm criado para **${user.username}**`
 		});
+
+		return;
 	}
 });

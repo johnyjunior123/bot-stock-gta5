@@ -51,6 +51,7 @@ createCommand({
                         `Semanas: **${p.weeksActive}**\n` +
                         `Pend: M: ${p.pending.metal} • C: ${p.pending.copper} • R: ${p.pending.rubber} • P: ${p.pending.plastic} • V: ${p.pending.glass} • A: ${p.pending.pieceWeapon} • PP: ${p.pending.pistolPiece}`;
                 }
+                return
             })
         );
 
@@ -72,5 +73,7 @@ createCommand({
         await interaction.editReply({
             embeds: [embed]
         });
+
+        return;
     },
 });

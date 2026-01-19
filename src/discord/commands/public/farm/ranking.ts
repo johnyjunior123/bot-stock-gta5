@@ -45,7 +45,7 @@ createCommand({
             .setDescription(`🗓️ Atualizado em: ${FormatDate(new Date())}`)
             .setFooter({ text: "Top 10 entregas aprovadas" });
 
-        lines.forEach((line, index) => {
+        lines.forEach((line) => {
             embed.addFields({
                 name: `⠀`,
                 value: line,
