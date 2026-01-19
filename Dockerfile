@@ -2,19 +2,21 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Dependências
+# Copia package.json
 COPY package*.json ./
+
+# Copia Prisma ANTES do npm install
+COPY prisma ./prisma
+
+# Instala dependências (postinstall agora funciona)
 RUN npm install
 
-# Prisma
-COPY prisma ./prisma
-RUN npx prisma generate
-
-# Código
+# Copia o restante do código
 COPY . .
 
+# Build do TypeScript
 RUN npm run build
 
-EXPOSE 3000
+EXPOSE 3003
 
 CMD ["npm", "run", "start"]
