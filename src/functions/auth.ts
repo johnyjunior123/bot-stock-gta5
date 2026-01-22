@@ -1,6 +1,6 @@
-import { ChatInputCommandInteraction, GuildMember } from "discord.js";
+import { ButtonInteraction, ChatInputCommandInteraction, GuildMember } from "discord.js";
 
-export async function auth(interaction: ChatInputCommandInteraction) {
+export async function auth(interaction: ButtonInteraction | ChatInputCommandInteraction) {
     const member = interaction.member as GuildMember | null;
 
     if (!member) {

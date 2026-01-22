@@ -3,12 +3,15 @@ import { ResponderType } from "@constatic/base";
 import { createContainer, isActionRowBuilder } from "@magicyan/discord";
 import { userMention } from "discord.js";
 import { FarmService } from "../../../cache/prisma.service.js";
+import { auth } from "../../../functions/auth.js";
 import { FormatDate } from "../../../functions/format-date.js";
 
 createResponder({
     customId: "/form/:action/:id",
     types: [ResponderType.Button], cache: "cached",
     async run(interaction, { action, id }) {
+        const allowed = await auth(interaction);
+        if (!allowed) return; // sai se não tiver permissão
         const container = createContainer({
             from: interaction
         })
