@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - bot_stock_postgres_data:/var/lib/postgresql/data
 
   app:
     container_name: bot-stock-app
@@ -27,4 +27,4 @@ services:
       - "3003:3000"
 
 volumes:
-  postgres_data:
+  bot_stock_postgres_data:
