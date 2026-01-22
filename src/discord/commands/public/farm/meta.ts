@@ -20,7 +20,6 @@ createCommand({
     ],
 
     async run(interaction) {
-        const guildId = interaction.guildId!;
         let weekStart: Date | null = null;
 
         // Se o usuário passou uma data para filtrar a semana
