@@ -1,9 +1,6 @@
 import { createCommand } from "#base";
 import { ApplicationCommandOptionType, ApplicationCommandType, ChannelType, PermissionsBitField } from "discord.js";
-
-const CATEGORY_ID = "1462481693184102633";
-const GERENTE_ROLE_ID = "1458557122068611246";
-const ADMIN_ROLE_ID = "1458557122068611246";
+import process from "node:process";
 
 createCommand({
 	name: "criar-canal-farm",
@@ -36,7 +33,7 @@ createCommand({
 		await guild.channels.create({
 			name: channelName,
 			type: ChannelType.GuildText,
-			parent: CATEGORY_ID,
+			parent: process.env.CATEGORY_ID!,
 			permissionOverwrites: [
 				{
 					id: guild.roles.everyone,
@@ -51,11 +48,11 @@ createCommand({
 					],
 				},
 				{
-					id: GERENTE_ROLE_ID,
+					id: process.env.GERENTE_ROLE_ID!,
 					allow: [PermissionsBitField.Flags.ViewChannel],
 				},
 				{
-					id: ADMIN_ROLE_ID,
+					id: process.env.ADMIN_ROLE_ID!,
 					allow: [PermissionsBitField.Flags.ViewChannel],
 				},
 			],

@@ -1,6 +1,7 @@
 import { createCommand } from "#base";
 import { ApplicationCommandType, EmbedBuilder } from "discord.js";
 import { FarmService } from "../../../../cache/prisma.service.js";
+import { auth } from "../../../../functions/auth.js";
 import { FormatDate } from "../../../../functions/format-date.js";
 
 createCommand({
@@ -9,6 +10,7 @@ createCommand({
     type: ApplicationCommandType.ChatInput,
 
     async run(interaction) {
+        if (!(await auth(interaction))) return;
         await interaction.deferReply({ ephemeral: true });
 
         const pendents = await FarmService.memberPendent();

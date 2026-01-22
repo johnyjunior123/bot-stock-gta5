@@ -1,22 +1,16 @@
 import { prisma } from "#database";
-import { Farm, Prisma } from "../database/prisma/client.js";
-import { weeksBetween } from "../functions/weeks-between.js";
+import { Farm, MaterialType } from "../database/prisma/client.js";
+import { getWeeksBetween } from "../functions/utils.js";
 
-type MemberWithFarms = Prisma.MemberGetPayload<{
-    include: {
-        farms: true;
-    };
-}>;
-
-const WEEKLY_MINIMUM = {
-    metal: 750,
-    copper: 750,
-    rubber: 875,
-    plastic: 875,
-    glass: 875,
-    pieceWeapon: 15,
-    pistolPiece: 5,
-};
+const MATERIALS: MaterialType[] = [
+    "metal",
+    "copper",
+    "rubber",
+    "plastic",
+    "glass",
+    "pieceWeapon",
+    "pistolPiece",
+];
 
 export const FarmService = {
     async createFarm(data: {
@@ -147,7 +141,7 @@ export const FarmService = {
     },
 
     async memberPendent() {
-        const members: MemberWithFarms[] = await prisma.member.findMany({
+        const members = await prisma.member.findMany({
             include: {
                 farms: {
                     where: { status: "APPROVED" },
@@ -158,75 +152,118 @@ export const FarmService = {
 
         const now = new Date();
 
-        return members
-            .map((member) => {
-                // 🔹 Nunca entregou → não entra na lista
-                if (member.farms.length === 0) return null;
+        // pega TODAS as metas até hoje
+        const allRequirements = await prisma.farmRequirement.findMany({
+            where: { startsAt: { lte: now } },
+            orderBy: { startsAt: "asc" },
+        });
 
-                const firstFarmDate = member.farms[0].createdAt;
-                const weeksActive = weeksBetween(firstFarmDate, now);
+        return Promise.all(
+            members.map(async (member) => {
+                const firstDate =
+                    member.farms.length > 0
+                        ? member.farms[0].createdAt
+                        : member.createdAt ?? now;
 
-                // 🔹 Total exigido desde o 1º farm
-                const required = {
-                    metal: WEEKLY_MINIMUM.metal * weeksActive,
-                    copper: WEEKLY_MINIMUM.copper * weeksActive,
-                    rubber: WEEKLY_MINIMUM.rubber * weeksActive,
-                    plastic: WEEKLY_MINIMUM.plastic * weeksActive,
-                    glass: WEEKLY_MINIMUM.glass * weeksActive,
-                    pieceWeapon: WEEKLY_MINIMUM.pieceWeapon * weeksActive,
-                    pistolPiece: WEEKLY_MINIMUM.pistolPiece * weeksActive,
-                };
+                const weeks = getWeeksBetween(firstDate, now);
 
-                // 🔹 Total entregue acumulado
+                const required = Object.fromEntries(
+                    MATERIALS.map(m => [m, 0])
+                ) as Record<MaterialType, number>;
+
+                // calcula meta correta por semana
+                for (const week of weeks) {
+                    for (const material of MATERIALS) {
+                        const metas = allRequirements.filter(r => r.material === material);
+                        const lastMeta = metas.filter(m => m.startsAt <= week).at(-1);
+                        if (lastMeta) required[material] += lastMeta.weeklyMin;
+                    }
+                }
+
                 const delivered = member.farms.reduce(
                     (acc, farm) => {
-                        acc.metal += farm.metal;
-                        acc.copper += farm.copper;
-                        acc.rubber += farm.rubber;
-                        acc.plastic += farm.plastic;
-                        acc.glass += farm.glass;
-                        acc.pieceWeapon += farm.pieceWeapon;
-                        acc.pistolPiece += farm.pistolPiece;
+                        for (const material of MATERIALS) {
+                            acc[material] += farm[material];
+                        }
                         return acc;
                     },
-                    {
-                        metal: 0,
-                        copper: 0,
-                        rubber: 0,
-                        plastic: 0,
-                        glass: 0,
-                        pieceWeapon: 0,
-                        pistolPiece: 0,
-                    }
+                    Object.fromEntries(MATERIALS.map(m => [m, 0])) as Record<MaterialType, number>
                 );
 
-                const pending = {
-                    metal: Math.max(0, required.metal - delivered.metal),
-                    copper: Math.max(0, required.copper - delivered.copper),
-                    rubber: Math.max(0, required.rubber - delivered.rubber),
-                    plastic: Math.max(0, required.plastic - delivered.plastic),
-                    glass: Math.max(0, required.glass - delivered.glass),
-                    pieceWeapon: Math.max(
-                        0,
-                        required.pieceWeapon - delivered.pieceWeapon
-                    ),
-                    pistolPiece: Math.max(
-                        0,
-                        required.pistolPiece - delivered.pistolPiece
-                    ),
-                };
+                const pending = Object.fromEntries(
+                    MATERIALS.map(m => [m, Math.max(0, required[m] - delivered[m])])
+                );
 
-                const hasPending = Object.values(pending).some((v) => v > 0);
+                const hasPending = Object.values(pending).some(v => v > 0);
                 if (!hasPending) return null;
 
                 return {
                     memberId: member.id,
                     guildId: member.guildId,
-                    weeksActive,
+                    weeksActive: weeks.length,
                     pending,
                 };
             })
-            .filter(Boolean);
+        ).then(r => r.filter(Boolean));
+    },
+
+    async getMemberPending(memberId: string, guildId: string) {
+        const member = await prisma.member.findUnique({
+            where: { id_guildId: { id: memberId, guildId } },
+            include: {
+                farms: {
+                    where: { status: "APPROVED" },
+                    orderBy: { createdAt: "asc" },
+                },
+            },
+        });
+
+        if (!member) return null;
+
+        const now = new Date();
+        const firstDate = member.farms.length > 0
+            ? member.farms[0].createdAt
+            : member.createdAt ?? now;
+
+        const weeks = getWeeksBetween(firstDate, now);
+
+        const requirements = await prisma.farmRequirement.findMany({
+            where: { startsAt: { lte: now } },
+            orderBy: { startsAt: "asc" },
+        });
+
+        const required = Object.fromEntries(
+            MATERIALS.map(m => [m, 0])
+        ) as Record<MaterialType, number>;
+
+        for (const week of weeks) {
+            for (const material of MATERIALS) {
+                const metas = requirements.filter(r => r.material === material);
+                const lastMeta = metas.filter(m => m.startsAt <= week).at(-1);
+                if (lastMeta) required[material] += lastMeta.weeklyMin;
+            }
+        }
+
+        const delivered = member.farms.reduce(
+            (acc, farm) => {
+                for (const material of MATERIALS) {
+                    acc[material] += farm[material];
+                }
+                return acc;
+            },
+            Object.fromEntries(MATERIALS.map(m => [m, 0])) as Record<MaterialType, number>
+        );
+
+        const pending = Object.fromEntries(
+            MATERIALS.map(m => [m, Math.max(0, required[m] - delivered[m])])
+        );
+
+        return {
+            member,
+            pending,
+            hasPending: Object.values(pending).some(v => v > 0),
+            weeksActive: weeks.length,
+        };
     },
 
     async findFarmById(id: number) {
@@ -305,5 +342,122 @@ export const FarmService = {
             pistolPiece: totalPistolPiece,
             total,
         };
+    },
+
+
+    async alterWeeklyMeta({ material, weeklyMin }: AlterWeeklyMetaDTO) {
+        const startsAt = getWeekStart();
+
+        await prisma.farmRequirement.upsert({
+            where: {
+                material_startsAt: {
+                    material,
+                    startsAt,
+                },
+            },
+            update: {
+                weeklyMin,
+            },
+            create: {
+                material,
+                weeklyMin,
+                startsAt,
+            },
+        });
+    },
+
+    async getMemberPendingDetailed(memberId: string, guildId: string) {
+        const member = await prisma.member.findUnique({
+            where: { id_guildId: { id: memberId, guildId } },
+            include: {
+                farms: {
+                    where: { status: "APPROVED" },
+                    orderBy: { createdAt: "asc" },
+                },
+            },
+        });
+        if (!member) return null;
+
+        const now = new Date();
+        const firstDate =
+            member.farms.length > 0
+                ? member.farms[0].createdAt
+                : member.createdAt ?? now;
+
+        const weeks = getWeeksBetween(firstDate, now);
+
+        const requirements = await prisma.farmRequirement.findMany({
+            where: { startsAt: { lte: now } },
+            orderBy: { startsAt: "asc" },
+        });
+        const deliveredTotal: Record<MaterialType, number> = Object.fromEntries(
+            MATERIALS.map(m => [m, 0])
+        ) as any;
+        for (const farm of member.farms) {
+            for (const material of MATERIALS) {
+                deliveredTotal[material] += farm[material];
+            }
+        }
+
+        const byWeek = [];
+        const remainingDelivered = { ...deliveredTotal };
+        for (const week of weeks) {
+            const required: Record<MaterialType, number> = Object.fromEntries(
+                MATERIALS.map(m => {
+                    const meta = requirements
+                        .filter(r => r.material === m && r.startsAt <= week)
+                        .at(-1);
+                    return [m, meta?.weeklyMin ?? 0];
+                })
+            ) as any;
+
+            const delivered: Record<MaterialType, number> = Object.fromEntries(
+                MATERIALS.map(m => {
+                    const used = Math.min(remainingDelivered[m], required[m]);
+                    remainingDelivered[m] -= used;
+                    return [m, used];
+                })
+            ) as any;
+
+            const pending: Record<MaterialType, number> = Object.fromEntries(
+                MATERIALS.map(m => [m, required[m] - delivered[m]])
+            ) as any;
+
+            byWeek.push({
+                weekStart: week.toISOString().split("T")[0],
+                required,
+                delivered,
+                pending,
+            });
+        }
+
+        const hasPending = byWeek.some(w =>
+            Object.values(w.pending).some(v => v > 0)
+        );
+
+        return {
+            member,
+            weeksActive: weeks.length,
+            hasPending,
+            totalPending: byWeek.reduce(
+                (acc, w) => acc + Object.values(w.pending).reduce((a, b) => a + b, 0),
+                0
+            ),
+            byWeek,
+        };
     }
 };
+
+interface AlterWeeklyMetaDTO {
+    material: MaterialType;
+    weeklyMin: number;
+}
+
+function getWeekStart(date = new Date()) {
+    const d = new Date(date);
+    const day = d.getDay(); // 0 = domingo
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
