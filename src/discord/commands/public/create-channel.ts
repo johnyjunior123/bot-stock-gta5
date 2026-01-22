@@ -49,11 +49,19 @@ createCommand({
 				},
 				{
 					id: process.env.GERENTE_ROLE_ID!,
-					allow: [PermissionsBitField.Flags.ViewChannel],
+					allow: [
+						PermissionsBitField.Flags.ViewChannel,
+						PermissionsBitField.Flags.SendMessages,
+						PermissionsBitField.Flags.ReadMessageHistory,
+					],
 				},
 				{
 					id: process.env.ADMIN_ROLE_ID!,
-					allow: [PermissionsBitField.Flags.ViewChannel],
+					allow: [
+						PermissionsBitField.Flags.SendMessages,
+						PermissionsBitField.Flags.ReadMessageHistory,
+						PermissionsBitField.Flags.ViewChannel
+					],
 				},
 			],
 		});
