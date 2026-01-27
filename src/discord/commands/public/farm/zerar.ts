@@ -40,24 +40,19 @@ createCommand({
         }
 
         try {
-            // Exemplo de limpeza total (ajuste conforme seus models)
             await prisma.$transaction([
                 prisma.farm.deleteMany({
                     where: { memberId: member.id },
                 }),
 
-                prisma.farmWeek.deleteMany({
-                    where: { memberId: member.id },
-                }),
-
-                prisma.farmPending.deleteMany({
-                    where: { memberId: member.id },
-                }),
-
-                // por último remove o membro
                 prisma.member.delete({
-                    where: { id: member.id },
-                }),
+                    where: {
+                        id_guildId: {
+                            id: member.id,
+                            guildId: member.guildId,
+                        },
+                    },
+                })
             ]);
 
             await interaction.reply({
@@ -70,5 +65,6 @@ createCommand({
                 ephemeral: true,
             });
         }
+        return
     },
 });
