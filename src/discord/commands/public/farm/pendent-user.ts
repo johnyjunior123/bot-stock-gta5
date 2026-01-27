@@ -4,16 +4,18 @@ import {
     ApplicationCommandOptionType,
     ApplicationCommandType,
 } from "discord.js";
+import { FarmService } from "../../../../cache/prisma.service.js";
 import { auth } from "../../../../functions/auth.js";
+import { formatMaterial } from "../../../../functions/utils.js";
 
 createCommand({
-    name: "zerar",
-    description: "Zera todos os dados de um usuário no sistema",
+    name: "pendente-only",
+    description: "Mostra o que um usuário está pendente no farm",
     type: ApplicationCommandType.ChatInput,
     options: [
         {
             name: "usuario",
-            description: "Usuário que deseja zerar",
+            description: "Usuário que deseja consultar",
             type: ApplicationCommandOptionType.User,
             required: true,
         },
@@ -21,16 +23,14 @@ createCommand({
 
     async run(interaction) {
         if (!(await auth(interaction))) return;
-
         const user = interaction.options.getUser("usuario", true);
-        const guildId = interaction.guildId!;
-
         const member = await prisma.member.findFirst({
             where: {
                 id: user.id,
-                guildId,
+                guildId: interaction.guildId!,
             },
         });
+        const guildId = interaction.guildId
 
         if (!member) {
             return interaction.reply({
@@ -39,36 +39,42 @@ createCommand({
             });
         }
 
-        try {
-            // Exemplo de limpeza total (ajuste conforme seus models)
-            await prisma.$transaction([
-                prisma.farm.deleteMany({
-                    where: { memberId: member.id },
-                }),
+        const result = await FarmService.getMemberPending(member.id, guildId);
 
-                prisma.farmWeek.deleteMany({
-                    where: { memberId: member.id },
-                }),
-
-                prisma.farmPending.deleteMany({
-                    where: { memberId: member.id },
-                }),
-
-                // por último remove o membro
-                prisma.member.delete({
-                    where: { id: member.id },
-                }),
-            ]);
-
-            await interaction.reply({
-                content: `✅ Todos os dados de <@${user.id}> foram zerados com sucesso.`,
-            });
-        } catch (error) {
-            console.error(error);
-            await interaction.reply({
-                content: "❌ Ocorreu um erro ao zerar os dados do usuário.",
+        if (!result) {
+            return interaction.reply({
+                content: "❌ Não foi possível calcular a pendência.",
                 ephemeral: true,
             });
         }
+
+        if (!result.hasPending) {
+            return interaction.reply({
+                content: `✅ <@${user.id}> não possui pendências no farm.`,
+                ephemeral: true,
+            });
+        }
+
+        const description = Object.entries(result.pending)
+            .filter(([, value]) => value > 0)
+            .map(([material, value]) => `• **${formatMaterial(material)}**: ${value}`)
+            .join("\n");
+
+        console.log('teste')
+
+        await interaction.reply({
+            embeds: [
+                {
+                    title: "📦 Pendências de Farm",
+                    description,
+                    footer: {
+                        text: `Semanas ativas: ${result.weeksActive}`,
+                    },
+                    color: 0xe74c3c,
+                },
+            ],
+        });
+
+        return
     },
 });
