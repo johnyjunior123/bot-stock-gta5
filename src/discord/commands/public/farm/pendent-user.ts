@@ -5,7 +5,6 @@ import {
     ApplicationCommandType,
 } from "discord.js";
 import { FarmService } from "../../../../cache/prisma.service.js";
-import { auth } from "../../../../functions/auth.js";
 import { formatMaterial } from "../../../../functions/utils.js";
 
 createCommand({
