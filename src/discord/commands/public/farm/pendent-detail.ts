@@ -19,7 +19,6 @@ createCommand({
     ],
 
     async run(interaction) {
-        if (!(await auth(interaction))) return;
         const user = interaction.options.getUser("usuario", true);
         const member = await prisma.member.findFirst({
             where: { id: user.id, guildId: interaction.guildId! },

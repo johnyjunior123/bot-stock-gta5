@@ -10,7 +10,6 @@ createCommand({
     type: ApplicationCommandType.ChatInput,
 
     async run(interaction) {
-        if (!(await auth(interaction))) return;
         await interaction.deferReply({ ephemeral: true });
 
         const pendents = await FarmService.memberPendent();
