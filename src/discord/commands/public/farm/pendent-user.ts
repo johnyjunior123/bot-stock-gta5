@@ -58,8 +58,6 @@ createCommand({
             .map(([material, value]) => `• **${formatMaterial(material)}**: ${value}`)
             .join("\n");
 
-        console.log('teste')
-
         await interaction.reply({
             embeds: [
                 {
