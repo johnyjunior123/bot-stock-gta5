@@ -82,7 +82,16 @@ createCommand({
 
         const price = calculatePrice(product, partnership, moneyType, quantity);
 
-        await interaction.reply({
+        const channel = interaction.guild?.channels.cache.get(constants.channels.vendas);
+        if (!channel || !channel.isSendable()) {
+            await interaction.reply({
+                content: "Canal de vendas não configurado ou sem permissão para enviar mensagens.",
+                ephemeral: true,
+            });
+            return;
+        }
+
+        await channel.send({
             embeds: [
                 {
                     title: "Venda",
@@ -98,6 +107,11 @@ createCommand({
                     ].join("\n"),
                 },
             ],
+        });
+
+        await interaction.reply({
+            content: `Venda enviada em ${channel}.`,
+            ephemeral: true,
         });
     },
 });
