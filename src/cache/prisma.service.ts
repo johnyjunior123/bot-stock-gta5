@@ -1,6 +1,7 @@
 import { prisma } from "#database";
 import { Farm, MaterialType } from "../database/prisma/client.js";
 import { getWeeksBetween } from "../functions/utils.js";
+import { currentFarmRequirements } from "../functions/farm-form.js";
 
 const MATERIALS: MaterialType[] = [
     "metal",
@@ -13,6 +14,15 @@ const MATERIALS: MaterialType[] = [
 ];
 
 export const FarmService = {
+    async currentRequirements() {
+        const now = new Date();
+        const requirements = await prisma.farmRequirement.findMany({
+            where: { startsAt: { lte: now } },
+            orderBy: [{ startsAt: "desc" }, { material: "asc" }],
+        });
+        return currentFarmRequirements(requirements, now);
+    },
+
     async createFarm(data: {
         memberId: string;
         memberGuildId: string;

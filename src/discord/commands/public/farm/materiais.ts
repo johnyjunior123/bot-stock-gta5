@@ -1,10 +1,8 @@
 import { createCommand } from "#base";
-import {
-    createLabel,
-    createModalFields,
-    createTextInput
-} from "@magicyan/discord";
-import { ApplicationCommandType, TextInputStyle } from "discord.js";
+import { ApplicationCommandType } from "discord.js";
+import { startFarmSession } from "../../../../cache/farm-cache.js";
+import { FarmService } from "../../../../cache/prisma.service.js";
+import { createFarmModal } from "../../../../functions/farm-modal.js";
 
 createCommand({
     name: "entregar-materiais",
@@ -12,51 +10,16 @@ createCommand({
     type: ApplicationCommandType.ChatInput,
 
     async run(interaction) {
-        await interaction.showModal({
-            title: "Entrega de Farm — Etapa 1",
-            customId: "/farm/step1",
-            components: createModalFields(
-                createLabel("Metal",
-                    createTextInput({
-                        customId: "metal",
-                        value: "0",
-                        style: TextInputStyle.Short,
-                        required: true
-                    })
-                ),
-                createLabel("Borracha",
-                    createTextInput({
-                        customId: "rubber",
-                        value: "0",
-                        style: TextInputStyle.Short,
-                        required: true
-                    })
-                ),
-                createLabel("Cobre",
-                    createTextInput({
-                        customId: "copper",
-                        value: "0",
-                        style: TextInputStyle.Short,
-                        required: true
-                    })
-                ),
-                createLabel("Plástico",
-                    createTextInput({
-                        customId: "plastic",
-                        value: "0",
-                        style: TextInputStyle.Short,
-                        required: true
-                    })
-                ),
-                createLabel("Vidro",
-                    createTextInput({
-                        customId: "glass",
-                        value: "0",
-                        style: TextInputStyle.Short,
-                        required: true
-                    })
-                ),
-            )
-        });
-    }
+        if (!interaction.guildId) return;
+        const requirements = await FarmService.currentRequirements();
+        if (!requirements.length) {
+            await interaction.reply({
+                content: "❌ Nenhum material obrigatório configurado para esta semana. Peça à equipe para cadastrar uma meta com /alterar-valor.",
+                ephemeral: true,
+            });
+            return;
+        }
+        const session = startFarmSession(`${interaction.guildId}:${interaction.user.id}`, requirements);
+        await interaction.showModal(createFarmModal(session));
+    },
 });

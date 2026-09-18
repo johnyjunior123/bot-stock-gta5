@@ -1,107 +1,93 @@
-import { createResponder } from "#base";
-import { ResponderType } from "@constatic/base";
 import { brBuilder, createContainer, createMediaGallery, createRow, Separator } from "@magicyan/discord";
-import { ButtonBuilder, ButtonStyle, ChannelType } from "discord.js";
-import { farmCache } from "../../../cache/farm-cache.js";
+import { ButtonBuilder, ButtonStyle, ChannelType, type ModalSubmitInteraction } from "discord.js";
+import { clearFarmSession, type FarmCacheData } from "../../../cache/farm-cache.js";
 import { FarmService } from "../../../cache/prisma.service.js";
 import { formatFarmList } from "../../../functions/farm-description.js";
 import { FormatDate } from "../../../functions/format-date.js";
 
-createResponder({
-    customId: "/farm/step2",
-    types: [ResponderType.ModalComponent],
-    async run(interaction) {
-        const { guild, member, fields } = interaction;
-        if (!guild || !member) return;
+export async function finishFarmDelivery(
+    interaction: ModalSubmitInteraction, key: string, session: FarmCacheData,
+) {
+    const { guild, fields, user } = interaction;
+    if (!guild) return;
 
-        const cache = farmCache.get(member.user.id);
-        if (!cache) {
-            await interaction.reply({
-                content: "❌ Tempo expirado. Refaça o envio.",
-                ephemeral: true,
-            });
-            return;
-        }
+    const files = Array.from(fields.getUploadedFiles("images")?.values() ?? []);
+    if (!files.length) {
+        await interaction.reply({ content: "❌ Anexe o comprovante da entrega.", ephemeral: true });
+        return;
+    }
+    const channel = guild.channels.cache.find(
+        ch => ch.type === ChannelType.GuildText && ch.name.includes(user.id),
+    );
+    if (!channel || !channel.isSendable()) {
+        await interaction.reply({
+            content: "❌ Não foi possível encontrar seu canal de farm. Contate a equipe.",
+            ephemeral: true,
+        });
+        return;
+    }
 
-        clearTimeout(cache.timeout);
+    session.submitting = true;
+    await interaction.deferReply({ ephemeral: true });
+    let farm;
+    try {
+        farm = await FarmService.createFarm({
+            memberId: user.id,
+            memberGuildId: guild.id,
+            ...session.quantities,
+        });
+    } catch (error) {
+        console.error(error);
+        session.submitting = false;
+        await interaction.editReply({
+            content: "❌ Erro ao registrar o farm no banco de dados. Tente novamente.",
+            components: [createRow(new ButtonBuilder({
+                customId: `/farm/continue/${session.id}/${session.page}`,
+                label: "Tentar novamente",
+                style: ButtonStyle.Primary,
+            }))],
+        });
+        return;
+    }
 
-        const farmData = {
-            ...cache.step1,
-            pieceWeapon: Number(fields.getTextInputValue("pieceWeapon")),
-            pistolPiece: Number(fields.getTextInputValue("pistolPiece")),
-        };
+    clearFarmSession(key);
+    const container = createContainer(
+        constants.colors.azoxo,
+        brBuilder(
+            "# 📦 Entrega de Material",
+            `👤 **Entregue por:** <@${user.id}> em ${FormatDate(new Date())}`,
+            "",
+            "## 📊 Detalhamento do Farm",
+            ...formatFarmList(session.quantities),
+        ),
+        Separator.Default,
+        createRow(
+            new ButtonBuilder({
+                customId: `/form/recuse/${farm.id}`,
+                label: "Recusar Entrega",
+                style: ButtonStyle.Danger,
+            }),
+            new ButtonBuilder({
+                customId: `/form/approve/${farm.id}`,
+                label: "Confirmar Entrega",
+                style: ButtonStyle.Success,
+            }),
+        ),
+        createMediaGallery(files),
+    );
 
-        let farm;
-
-        try {
-            farm = await FarmService.createFarm({
-                memberId: member.user.id,
-                memberGuildId: guild.id,
-
-                metal: farmData.metal,
-                copper: farmData.copper,
-                rubber: farmData.rubber,
-                plastic: farmData.plastic,
-                glass: farmData.glass,
-                pieceWeapon: farmData.pieceWeapon,
-                pistolPiece: farmData.pistolPiece,
-                dirtyMoney: farmData.dirtyMoney,
-            });
-        } catch (error) {
-            console.error(error);
-
-            await interaction.reply({
-                content: "❌ Erro ao registrar o farm no banco de dados.",
-                ephemeral: true,
-            });
-            return;
-        }
-
-        farmCache.delete(member.user.id);
-        const images = fields.getUploadedFiles("images")
-        const files = Array.from(images?.values() ?? [])
-        const channel = guild.channels.cache.find(
-            ch =>
-                ch.type === ChannelType.GuildText &&
-                ch.name.includes(member.user.id)
-        );
-        if (!channel || !channel.isSendable()) {
-            await interaction.editReply({
-                content: "❌ Não foi possível encontrar seu canal de farm. Contate a equipe."
-            });
-            return
-        }
-        const container = createContainer(
-            constants.colors.azoxo,
-            brBuilder(
-                `# 📦 Entrega de Material`,
-                `👤 **Entregue por:** ${member} em ${FormatDate(new Date())}`,
-                "",
-                "## 📊 Detalhamento do Farm",
-                ...formatFarmList(farmData)
-            ),
-            Separator.Default,
-            createRow(
-                new ButtonBuilder({
-                    customId: `/form/recuse/${farm.id}`,
-                    label: "Recusar Entrega",
-                    style: ButtonStyle.Danger,
-                }),
-                new ButtonBuilder({
-                    customId: `/form/approve/${farm.id}`,
-                    label: "Confirmar Entrega",
-                    style: ButtonStyle.Success,
-                })
-            ),
-            files.length >= 1 && createMediaGallery(files)
-        );
-
+    try {
         await channel.send({
             flags: ["IsComponentsV2"],
             components: [container],
-            files
+            files,
         });
-
-        await interaction.deferUpdate()
-    },
-});
+    } catch (error) {
+        console.error(error);
+        await interaction.editReply({
+            content: `❌ A entrega #${farm.id} foi registrada, mas não foi possível publicar o comprovante no canal. Contate a equipe e informe esse número antes de reenviar.`,
+        });
+        return;
+    }
+    await interaction.editReply({ content: "✅ Entrega registrada e enviada para aprovação." });
+}

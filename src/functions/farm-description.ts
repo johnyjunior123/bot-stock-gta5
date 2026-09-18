@@ -8,6 +8,6 @@ export function formatFarmList(farm: Partial<Farm>): string[] {
         `🧴 **Plástico:** ${farm.plastic ?? 0}`,
         `🧪 **Vidro:** ${farm.glass ?? 0}`,
         `🔫 **Peça de Arma:** ${farm.pieceWeapon ?? 0}`,
-        `🔫 **Peça de Pistola:** ${farm.pistolPiece ?? 0}`,
+        `🔫 **Peça de Sub:** ${farm.pistolPiece ?? 0}`,
     ];
 }

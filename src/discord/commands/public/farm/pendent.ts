@@ -49,7 +49,7 @@ createCommand({
                     const name = member?.nickname ?? member?.user?.username ?? "Desconhecido";
                     return `**#${idx + 1}** ${name}\n` +
                         `Semanas: **${p.weeksActive}**\n` +
-                        `Pend: M: ${p.pending.metal} • C: ${p.pending.copper} • R: ${p.pending.rubber} • P: ${p.pending.plastic} • V: ${p.pending.glass} • A: ${p.pending.pieceWeapon} • PP: ${p.pending.pistolPiece}`;
+                        `Pend: M: ${p.pending.metal} • C: ${p.pending.copper} • R: ${p.pending.rubber} • P: ${p.pending.plastic} • V: ${p.pending.glass} • A: ${p.pending.pieceWeapon} • Sub: ${p.pending.pistolPiece}`;
                 }
                 return
             })

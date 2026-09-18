@@ -35,7 +35,8 @@ export function formatMaterial(material: string) {
         plastic: "Plástico",
         glass: "Vidro",
         pieceWeapon: "Peça de Arma",
-        pistolPiece: "Corpo de Arma",
+        // Mantém a chave existente para preservar metas e entregas já cadastradas.
+        pistolPiece: "Peça de Sub",
     };
 
     return map[material] ?? material;

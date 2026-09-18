@@ -1,5 +1,5 @@
 import { createCommand } from "#base";
-import { prisma } from "#database";
+import { FarmService } from "../../../../cache/prisma.service.js";
 import { ApplicationCommandType } from "discord.js";
 import { formatMaterial } from "../../../../functions/utils.js";
 
@@ -9,11 +9,7 @@ createCommand({
     type: ApplicationCommandType.ChatInput,
 
     async run(interaction) {
-        const requirements = await prisma.farmRequirement.findMany({
-            orderBy: {
-                startsAt: "desc",
-            },
-        });
+        const requirements = await FarmService.currentRequirements();
 
         if (!requirements.length) {
             return interaction.reply({

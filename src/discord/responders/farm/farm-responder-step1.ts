@@ -2,48 +2,62 @@ import { createResponder } from "#base";
 import { ResponderType } from "@constatic/base";
 import { createRow } from "@magicyan/discord";
 import { ButtonBuilder, ButtonStyle } from "discord.js";
-import { farmCache } from "../../../cache/farm-cache.js";
+import { getFarmSession } from "../../../cache/farm-cache.js";
+import { readFarmQuantities } from "../../../functions/farm-form.js";
+import { finishFarmDelivery } from "./farm-responder.final.js";
 
 createResponder({
-    customId: "/farm/step1",
-    types: [ResponderType.Modal],
-    async run(interaction) {
-        const { member, fields } = interaction;
+    customId: "/farm/submit/:sessionId/:page",
+    types: [ResponderType.Modal, ResponderType.ModalComponent],
+    async run(interaction, { sessionId, page }) {
+        if (!interaction.guildId) return;
+        const key = `${interaction.guildId}:${interaction.user.id}`;
+        const session = getFarmSession(key, sessionId, page);
+        if (!session) {
+            await interaction.reply({
+                content: "❌ Esta etapa não está mais disponível. Use /entregar-materiais para iniciar uma nova entrega.",
+                ephemeral: true,
+            });
+            return;
+        }
 
-        if (!member) return
+        const continueButton = () => createRow(new ButtonBuilder({
+            customId: `/farm/continue/${session.id}/${session.page}`,
+            label: "Continuar",
+            style: ButtonStyle.Primary,
+        }));
 
-        const step1Data = {
-            metal: Number(fields.getTextInputValue("metal")),
-            copper: Number(fields.getTextInputValue("copper")),
-            plastic: Number(fields.getTextInputValue("plastic")),
-            glass: Number(fields.getTextInputValue("glass")),
-            rubber: Number(fields.getTextInputValue("rubber")),
-        };
+        try {
+            const quantities = readFarmQuantities(session.pages[session.page],
+                material => interaction.fields.getTextInputValue(material));
+            session.quantities = { ...session.quantities, ...quantities };
+        } catch (error) {
+            await interaction.reply({
+                content: error instanceof Error ? error.message : "❌ Quantidade inválida.",
+                components: [continueButton()],
+                ephemeral: true,
+            });
+            return;
+        }
 
-        const old = farmCache.get(member.user.id);
-        if (old) clearTimeout(old.timeout);
+        if (session.page < session.pages.length - 1) {
+            session.page++;
+            await interaction.reply({
+                content: "✅ Quantidades salvas. Clique abaixo para continuar a entrega.",
+                components: [continueButton()],
+                ephemeral: true,
+            });
+            return;
+        }
 
-        const timeout = setTimeout(() => {
-            farmCache.delete(member.user.id);
-        }, 20 * 60 * 1000);
+        if (!Object.values(session.quantities).some(quantity => quantity > 0)) {
+            await interaction.reply({
+                content: "❌ Informe pelo menos uma quantidade maior que zero. Use /entregar-materiais para refazer a entrega.",
+                ephemeral: true,
+            });
+            return;
+        }
 
-        farmCache.set(member.user.id, {
-            step1: step1Data,
-            expiresAt: Date.now() + 20 * 60 * 1000,
-            timeout,
-        });
-
-        await interaction.reply({
-            content: "✅ Etapa 1 salva com sucesso.\nClique no botão abaixo para continuar.",
-            components: [
-                createRow(
-                    new ButtonBuilder({
-                        customId: "/farm/continue",
-                        label: "➡️ Continuar",
-                        style: ButtonStyle.Primary,
-                    })
-                )
-            ]
-        });
+        await finishFarmDelivery(interaction, key, session);
     },
 });

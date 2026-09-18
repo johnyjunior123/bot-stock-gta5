@@ -22,7 +22,7 @@ createCommand({
                 { name: "Plástico", value: "plastic" },
                 { name: "Vidro", value: "glass" },
                 { name: "Peça de Arma", value: "pieceWeapon" },
-                { name: "Corpo de Pistola", value: "pistolPiece" },
+                { name: "Peça de Sub", value: "pistolPiece" },
             ],
         },
         {

@@ -36,7 +36,7 @@ createCommand({
                 const name = member?.nickname ?? member?.user?.username ?? "Desconhecido";
 
                 return `**#${idx + 1}** ${name}\n` +
-                    `Tot: **${r.total}** • M: ${r.metal} • C: ${r.copper} • B: ${r.rubber} • P: ${r.plastic} • V: ${r.glass} • A: ${r.pieceWeapon} • PP: ${r.pistolPiece}`;
+                    `Tot: **${r.total}** • M: ${r.metal} • C: ${r.copper} • B: ${r.rubber} • P: ${r.plastic} • V: ${r.glass} • A: ${r.pieceWeapon} • Sub: ${r.pistolPiece}`;
             })
         );
 

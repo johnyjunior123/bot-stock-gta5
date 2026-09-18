@@ -1,46 +1,20 @@
 import { createResponder } from "#base";
 import { ResponderType } from "@constatic/base";
-import { createFileUpload, createLabel, createModalFields, createTextInput } from "@magicyan/discord";
-import { TextInputStyle } from "discord.js";
-import { farmCache } from "../../../cache/farm-cache.js";
+import { getFarmSession } from "../../../cache/farm-cache.js";
+import { createFarmModal } from "../../../functions/farm-modal.js";
 
 createResponder({
-    customId: "/farm/continue",
+    customId: "/farm/continue/:sessionId/:page",
     types: [ResponderType.Button],
-    async run(interaction) {
-        const cache = farmCache.get(interaction.user.id);
-        if (!cache) {
+    async run(interaction, { sessionId, page }) {
+        const session = getFarmSession(`${interaction.guildId}:${interaction.user.id}`, sessionId, page);
+        if (!session) {
             await interaction.reply({
-                content: "❌ Sua sessão expirou. Envie o formulário novamente.",
+                content: "❌ Esta etapa não está mais disponível. Use /entregar-materiais para iniciar uma nova entrega.",
                 ephemeral: true,
             });
             return;
         }
-
-        await interaction.showModal({
-            title: "Entrega de Farm — Etapa 2",
-            customId: "/farm/step2",
-            components: createModalFields(
-                createLabel("Peça de arma",
-                    createTextInput({
-                        customId: "pieceWeapon",
-                        value: "0",
-                        style: TextInputStyle.Short,
-                        required: true
-                    })
-                ),
-                createLabel("Corpo de pistola",
-                    createTextInput({
-                        customId: "pistolPiece",
-                        value: "0",
-                        style: TextInputStyle.Short,
-                        required: true
-                    })
-                ),
-                createLabel("Comprovante",
-                    createFileUpload("images", true, 1)
-                )
-            )
-        });
+        await interaction.showModal(createFarmModal(session));
     },
 });
