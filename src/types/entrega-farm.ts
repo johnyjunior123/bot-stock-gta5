@@ -4,6 +4,7 @@ export type Farm = {
     copper: number
     plastic: number
     glass: number
+    sand: number
     pieceWeapon: number
     pistolPiece: number
     dirtyMoney?: number

@@ -11,6 +11,7 @@ model Farm {
     copper        Int        @default(0)
     plastic       Int        @default(0)
     glass         Int        @default(0)
+    sand          Int        @default(0)
     pieceWeapon   Int        @default(0)
     pistolPiece   Int        @default(0)
     dirtyMoney    Int        @default(0)
@@ -30,6 +31,7 @@ enum MaterialType {
     rubber
     plastic
     glass
+    sand
     pieceWeapon
     pistolPiece
 }

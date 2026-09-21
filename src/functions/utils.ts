@@ -34,6 +34,7 @@ export function formatMaterial(material: string) {
         rubber: "Borracha",
         plastic: "Plástico",
         glass: "Vidro",
+        sand: "Areia",
         pieceWeapon: "Peça de Arma",
         // Mantém a chave existente para preservar metas e entregas já cadastradas.
         pistolPiece: "Peça de Sub",

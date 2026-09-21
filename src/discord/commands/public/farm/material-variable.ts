@@ -21,6 +21,7 @@ createCommand({
                 { name: "Borracha", value: "rubber" },
                 { name: "Plástico", value: "plastic" },
                 { name: "Vidro", value: "glass" },
+                { name: "Areia", value: "sand" },
                 { name: "Peça de Arma", value: "pieceWeapon" },
                 { name: "Peça de Sub", value: "pistolPiece" },
             ],

@@ -28,6 +28,10 @@ metal com quantidade 1000 faz `/entregar-materiais` solicitar metal. Outros mate
 com meta maior que zero também aparecem; definir uma meta como zero retira o item
 do formulário. `/meta` mostra esses mesmos materiais vigentes.
 
+**Areia** também está disponível. Aplique as migrações com `npx prisma migrate deploy`
+e gere o cliente com `npx prisma generate` antes de compilar a atualização.
+Configure sua meta em `/alterar-valor` para incluí-la no formulário de entrega.
+
 O formulário informa a meta e solicita a quantidade entregue de cada material.
 Entregas parciais são permitidas: informe zero para o que não entregou e pelo menos
 uma quantidade positiva. O comprovante é obrigatório. Até quatro materiais cabem

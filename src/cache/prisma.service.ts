@@ -9,6 +9,7 @@ const MATERIALS: MaterialType[] = [
     "rubber",
     "plastic",
     "glass",
+    "sand",
     "pieceWeapon",
     "pistolPiece",
 ];
@@ -31,6 +32,7 @@ export const FarmService = {
         rubber?: number;
         plastic?: number;
         glass?: number;
+        sand?: number;
         pieceWeapon?: number;
         pistolPiece?: number;
         dirtyMoney?: number;
@@ -63,6 +65,7 @@ export const FarmService = {
                     rubber: data.rubber ?? 0,
                     plastic: data.plastic ?? 0,
                     glass: data.glass ?? 0,
+                    sand: data.sand ?? 0,
                     pieceWeapon: data.pieceWeapon ?? 0,
                     pistolPiece: data.pistolPiece ?? 0,
                     dirtyMoney: data.dirtyMoney ?? 0,
@@ -99,6 +102,7 @@ export const FarmService = {
             rubber: number;
             plastic: number;
             glass: number;
+            sand: number;
             pieceWeapon: number;
             pistolPiece: number;
             total: number;
@@ -112,6 +116,7 @@ export const FarmService = {
             const rubber = farm.rubber;
             const plastic = farm.plastic;
             const glass = farm.glass;
+            const sand = farm.sand;
             const pieceWeapon = farm.pieceWeapon;
             const pistolPiece = farm.pistolPiece;
 
@@ -123,9 +128,10 @@ export const FarmService = {
                     rubber,
                     plastic,
                     glass,
+                    sand,
                     pieceWeapon,
                     pistolPiece,
-                    total: metal + copper + rubber + plastic + glass + pieceWeapon + pistolPiece,
+                    total: metal + copper + rubber + plastic + glass + sand + pieceWeapon + pistolPiece,
                 });
             } else {
                 existing.metal += metal;
@@ -133,6 +139,7 @@ export const FarmService = {
                 existing.rubber += rubber;
                 existing.plastic += plastic;
                 existing.glass += glass;
+                existing.sand += sand;
                 existing.pieceWeapon += pieceWeapon;
                 existing.pistolPiece += pistolPiece;
 
@@ -142,6 +149,7 @@ export const FarmService = {
                     existing.rubber +
                     existing.plastic +
                     existing.glass +
+                    existing.sand +
                     existing.pieceWeapon +
                     existing.pistolPiece;
             }
@@ -298,10 +306,11 @@ export const FarmService = {
         const totalRubber = farms.reduce((acc, f) => acc + f.rubber, 0);
         const totalPlastic = farms.reduce((acc, f) => acc + f.plastic, 0);
         const totalGlass = farms.reduce((acc, f) => acc + f.glass, 0);
+        const totalSand = farms.reduce((acc, f) => acc + f.sand, 0);
         const totalPieceWeapon = farms.reduce((acc, f) => acc + f.pieceWeapon, 0);
         const totalPistolPiece = farms.reduce((acc, f) => acc + f.pistolPiece, 0);
 
-        const total = totalMetal + totalCopper + totalRubber + totalPlastic + totalGlass + totalPieceWeapon + totalPistolPiece;
+        const total = totalMetal + totalCopper + totalRubber + totalPlastic + totalGlass + totalSand + totalPieceWeapon + totalPistolPiece;
 
         return {
             farms,
@@ -310,6 +319,7 @@ export const FarmService = {
             rubber: totalRubber,
             plastic: totalPlastic,
             glass: totalGlass,
+            sand: totalSand,
             pieceWeapon: totalPieceWeapon,
             pistolPiece: totalPistolPiece,
             total,
@@ -336,10 +346,11 @@ export const FarmService = {
         const totalRubber = farms.reduce((acc, f) => acc + f.rubber, 0);
         const totalPlastic = farms.reduce((acc, f) => acc + f.plastic, 0);
         const totalGlass = farms.reduce((acc, f) => acc + f.glass, 0);
+        const totalSand = farms.reduce((acc, f) => acc + f.sand, 0);
         const totalPieceWeapon = farms.reduce((acc, f) => acc + f.pieceWeapon, 0);
         const totalPistolPiece = farms.reduce((acc, f) => acc + f.pistolPiece, 0);
 
-        const total = totalMetal + totalCopper + totalRubber + totalPlastic + totalGlass + totalPieceWeapon + totalPistolPiece;
+        const total = totalMetal + totalCopper + totalRubber + totalPlastic + totalGlass + totalSand + totalPieceWeapon + totalPistolPiece;
 
         return {
             farms,
@@ -348,6 +359,7 @@ export const FarmService = {
             rubber: totalRubber,
             plastic: totalPlastic,
             glass: totalGlass,
+            sand: totalSand,
             pieceWeapon: totalPieceWeapon,
             pistolPiece: totalPistolPiece,
             total,

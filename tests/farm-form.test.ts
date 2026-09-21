@@ -14,6 +14,7 @@ const requirements: FarmRequirement[] = [
     { material: "glass", weeklyMin: 500 },
     { material: "pieceWeapon", weeklyMin: 10 },
     { material: "pistolPiece", weeklyMin: 20 },
+    { material: "sand", weeklyMin: 600 },
 ];
 
 test("metas vigentes usam o último valor, ignoram futuras e desativam valor zero", () => {
@@ -41,14 +42,14 @@ test("apenas metal cadastrado gera campo obrigatório de metal e comprovante", (
         assert.match(serialized, /1000/);
         assert.match(serialized, /"custom_id":"metal"/);
         assert.match(serialized, /"custom_id":"images"/);
-        assert.doesNotMatch(serialized, /copper|rubber|plastic|glass|pieceWeapon|pistolPiece/);
+        assert.doesNotMatch(serialized, /copper|rubber|plastic|glass|pieceWeapon|pistolPiece|sand/);
         assert.ok(components.every(component => "component" in component && component.component.required));
     } finally {
         clearFarmSession(key);
     }
 });
 
-test("de um a sete materiais, todos aparecem uma vez e nenhum modal excede cinco campos", () => {
+test("de um a oito materiais, todos aparecem uma vez e nenhum modal excede cinco campos", () => {
     for (let count = 1; count <= requirements.length; count++) {
         const selected = requirements.slice(0, count);
         const key = `guild:count-${count}`;
