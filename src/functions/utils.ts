@@ -40,5 +40,5 @@ export function formatMaterial(material: string) {
         pistolPiece: "Peça de Sub",
     };
 
-    return map[material] ?? material;
+    return Object.hasOwn(map, material) ? map[material] : material;
 }

@@ -23,10 +23,28 @@ This is the most complete discord bot base you've ever seen! Developed by [@rinc
 Copie `.env.example` para `.env` e preencha as variáveis conforme os comentários.
 Configure também os IDs de canais e cargos em `constants.json`.
 
+`/criar-canal-farm` cadastra o usuário no banco antes de criar seu canal.
+Se o canal já existir, o comando garante o cadastro sem duplicar o usuário nem
+alterar sua data de entrada. As pendências contam desde a semana do cadastro,
+mesmo antes da primeira entrega, e essa data é mantida após as entregas.
+
 Use `/alterar-valor` para configurar a meta semanal de cada material. Por exemplo,
 metal com quantidade 1000 faz `/entregar-materiais` solicitar metal. Outros materiais
 com meta maior que zero também aparecem; definir uma meta como zero retira o item
 do formulário. `/meta` mostra esses mesmos materiais vigentes.
+
+Para cadastrar um material, use `/criar_novo_material nome:Explosivos` e depois
+`/alterar-valor material:Explosivos qntde:100`. O material aparece imediatamente
+nas sugestões de `/alterar-valor`; digite parte do nome para encontrá-lo.
+O cadastro exige o mesmo cargo autorizado por `ALLOWED_ROLE_ID` que a alteração
+de metas. Nomes duplicados são rejeitados, inclusive variações de maiúsculas,
+acentos e espaços. O cadastro sozinho não define uma meta.
+
+Novos materiais ficam salvos no banco e, após configurar uma meta positiva,
+participam das entregas, consultas, ranking e pendências. Os materiais e o
+histórico existentes são preservados. O catálogo segue o escopo global das metas.
+Antes de iniciar esta versão, execute `npx prisma migrate deploy`,
+`npx prisma generate` e `npm run build`, e reinicie o bot para registrar o comando.
 
 **Areia** também está disponível. Aplique as migrações com `npx prisma migrate deploy`
 e gere o cliente com `npx prisma generate` antes de compilar a atualização.

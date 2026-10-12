@@ -2,6 +2,7 @@ import { createCommand } from "#base";
 import { brBuilder, createContainer, Separator } from "@magicyan/discord";
 import { ApplicationCommandOptionType, ApplicationCommandType } from "discord.js";
 import { FarmService } from "../../../../cache/prisma.service.js";
+import { formatFarmList } from "../../../../functions/farm-description.js";
 import { FormatDate } from "../../../../functions/format-date.js";
 
 function getWeekRange(date = new Date()) {
@@ -49,25 +50,11 @@ createCommand({
                 `🗓️ Atualizado em: ${FormatDate(new Date())}`,
                 "",
                 `## 🗓️ Esta semana (${weekRange.start} → ${weekRange.end})`,
-                `• Metal: ${weekly.metal}`,
-                `• Cobre: ${weekly.copper}`,
-                `• Borracha: ${weekly.rubber}`,
-                `• Plástico: ${weekly.plastic}`,
-                `• Vidro: ${weekly.glass}`,
-                `• Areia: ${weekly.sand}`,
-                `• Arma: ${weekly.pieceWeapon}`,
-                `• Peça de Sub: ${weekly.pistolPiece}`,
+                ...formatFarmList(weekly.quantities),
                 `• **Total da semana:** ${weekly.total}`,
                 "",
                 `## 📌 Total Geral`,
-                `• Metal: ${total.metal}`,
-                `• Cobre: ${total.copper}`,
-                `• Borracha: ${total.rubber}`,
-                `• Plástico: ${total.plastic}`,
-                `• Vidro: ${total.glass}`,
-                `• Areia: ${total.sand}`,
-                `• Arma: ${total.pieceWeapon}`,
-                `• Peça de Sub: ${total.pistolPiece}`,
+                ...formatFarmList(total.quantities),
                 `• **Total Geral:** ${total.total}`,
             ),
             Separator.Default,

@@ -34,7 +34,7 @@ export async function finishFarmDelivery(
         farm = await FarmService.createFarm({
             memberId: user.id,
             memberGuildId: guild.id,
-            ...session.quantities,
+            quantities: session.quantities,
         });
     } catch (error) {
         console.error(error);

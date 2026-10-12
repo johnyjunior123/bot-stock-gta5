@@ -1,20 +1,39 @@
 import { prisma } from "#database";
-import { Farm, MaterialType } from "../database/prisma/client.js";
-import { getWeeksBetween } from "../functions/utils.js";
+import { Prisma } from "../database/prisma/client.js";
+import { formatMaterial, getWeeksBetween, getWeekStart } from "../functions/utils.js";
 import { currentFarmRequirements } from "../functions/farm-form.js";
-
-const MATERIALS: MaterialType[] = [
-    "metal",
-    "copper",
-    "rubber",
-    "plastic",
-    "glass",
-    "sand",
-    "pieceWeapon",
-    "pistolPiece",
-];
+import { BUILTIN_MATERIALS, farmQuantities, normalizeMaterialName, sumFarmQuantities } from "../functions/materials.js";
 
 export const FarmService = {
+    async ensureMember(memberId: string, guildId: string) {
+        return prisma.$transaction(tx => upsertFarmMember(tx, memberId, guildId));
+    },
+
+    async createMaterial(data: { name: string; normalizedName: string }) {
+        try {
+            await prisma.customMaterial.create({ data });
+            return true;
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return false;
+            throw error;
+        }
+    },
+
+    async customMaterialNames() {
+        const materials = await prisma.customMaterial.findMany({ orderBy: { name: "asc" } });
+        return materials.map(material => material.name);
+    },
+
+    async resolveMaterial(input: string) {
+        const normalizedName = normalizeMaterialName(input);
+        const builtin = BUILTIN_MATERIALS.find(material => [material, formatMaterial(material)].some(
+            name => normalizeMaterialName(name) === normalizedName,
+        ));
+        if (builtin) return builtin;
+        const custom = await prisma.customMaterial.findUnique({ where: { normalizedName } });
+        return custom?.name;
+    },
+
     async currentRequirements() {
         const now = new Date();
         const requirements = await prisma.farmRequirement.findMany({
@@ -27,48 +46,26 @@ export const FarmService = {
     async createFarm(data: {
         memberId: string;
         memberGuildId: string;
-        metal?: number;
-        copper?: number;
-        rubber?: number;
-        plastic?: number;
-        glass?: number;
-        sand?: number;
-        pieceWeapon?: number;
-        pistolPiece?: number;
-        dirtyMoney?: number;
+        quantities: Partial<Record<string, number>>;
     }) {
+        const quantities = data.quantities;
+        const customMaterials = Object.fromEntries(Object.entries(quantities).filter(
+            (entry): entry is [string, number] => entry[1] !== undefined && !BUILTIN_MATERIALS.some(key => key === entry[0]),
+        ));
         return prisma.$transaction(async (tx) => {
-            await tx.guild.upsert({
-                where: { id: data.memberGuildId },
-                create: { id: data.memberGuildId },
-                update: {},
-            });
-
-            await tx.member.upsert({
-                where: {
-                    id_guildId: {
-                        id: data.memberId,
-                        guildId: data.memberGuildId,
-                    },
-                },
-                create: {
-                    id: data.memberId,
-                    guildId: data.memberGuildId,
-                },
-                update: {},
-            });
+            await upsertFarmMember(tx, data.memberId, data.memberGuildId);
 
             return tx.farm.create({
                 data: {
-                    metal: data.metal ?? 0,
-                    copper: data.copper ?? 0,
-                    rubber: data.rubber ?? 0,
-                    plastic: data.plastic ?? 0,
-                    glass: data.glass ?? 0,
-                    sand: data.sand ?? 0,
-                    pieceWeapon: data.pieceWeapon ?? 0,
-                    pistolPiece: data.pistolPiece ?? 0,
-                    dirtyMoney: data.dirtyMoney ?? 0,
+                    metal: quantities.metal ?? 0,
+                    copper: quantities.copper ?? 0,
+                    rubber: quantities.rubber ?? 0,
+                    plastic: quantities.plastic ?? 0,
+                    glass: quantities.glass ?? 0,
+                    sand: quantities.sand ?? 0,
+                    pieceWeapon: quantities.pieceWeapon ?? 0,
+                    pistolPiece: quantities.pistolPiece ?? 0,
+                    customMaterials,
                     status: "PENDING",
                     memberId: data.memberId,
                     memberGuildId: data.memberGuildId,
@@ -92,70 +89,16 @@ export const FarmService = {
     },
 
     async ranking() {
-        const farms: Farm[] = await prisma.farm.findMany({
-            where: { status: "APPROVED" },
-        });
-        const map = new Map<string, {
-            memberId: string;
-            metal: number;
-            copper: number;
-            rubber: number;
-            plastic: number;
-            glass: number;
-            sand: number;
-            pieceWeapon: number;
-            pistolPiece: number;
-            total: number;
-        }>();
-
+        const farms = await prisma.farm.findMany({ where: { status: "APPROVED" } });
+        const members = new Map<string, typeof farms>();
         for (const farm of farms) {
-            const existing = map.get(farm.memberId);
-
-            const metal = farm.metal;
-            const copper = farm.copper;
-            const rubber = farm.rubber;
-            const plastic = farm.plastic;
-            const glass = farm.glass;
-            const sand = farm.sand;
-            const pieceWeapon = farm.pieceWeapon;
-            const pistolPiece = farm.pistolPiece;
-
-            if (!existing) {
-                map.set(farm.memberId, {
-                    memberId: farm.memberId,
-                    metal,
-                    copper,
-                    rubber,
-                    plastic,
-                    glass,
-                    sand,
-                    pieceWeapon,
-                    pistolPiece,
-                    total: metal + copper + rubber + plastic + glass + sand + pieceWeapon + pistolPiece,
-                });
-            } else {
-                existing.metal += metal;
-                existing.copper += copper;
-                existing.rubber += rubber;
-                existing.plastic += plastic;
-                existing.glass += glass;
-                existing.sand += sand;
-                existing.pieceWeapon += pieceWeapon;
-                existing.pistolPiece += pistolPiece;
-
-                existing.total =
-                    existing.metal +
-                    existing.copper +
-                    existing.rubber +
-                    existing.plastic +
-                    existing.glass +
-                    existing.sand +
-                    existing.pieceWeapon +
-                    existing.pistolPiece;
-            }
+            const deliveries = members.get(farm.memberId) ?? [];
+            deliveries.push(farm);
+            members.set(farm.memberId, deliveries);
         }
-        const ranking = Array.from(map.values());
-        return ranking.sort((a, b) => b.total - a.total);
+        return [...members].map(([memberId, deliveries]) => ({
+            memberId, ...sumFarmQuantities(deliveries),
+        })).sort((a, b) => b.total - a.total);
     },
 
     async memberPendent() {
@@ -176,18 +119,17 @@ export const FarmService = {
             orderBy: { startsAt: "asc" },
         });
 
+        const MATERIALS = [...new Set([...BUILTIN_MATERIALS, ...allRequirements.map(r => r.material)])];
+
         return Promise.all(
             members.map(async (member) => {
-                const firstDate =
-                    member.farms.length > 0
-                        ? member.farms[0].createdAt
-                        : member.createdAt ?? now;
+                const firstDate = member.createdAt;
 
                 const weeks = getWeeksBetween(firstDate, now);
 
                 const required = Object.fromEntries(
                     MATERIALS.map(m => [m, 0])
-                ) as Record<MaterialType, number>;
+                ) as Record<string, number>;
 
                 // calcula meta correta por semana
                 for (const week of weeks) {
@@ -200,12 +142,13 @@ export const FarmService = {
 
                 const delivered = member.farms.reduce(
                     (acc, farm) => {
+                        const quantities = farmQuantities(farm);
                         for (const material of MATERIALS) {
-                            acc[material] += farm[material];
+                            acc[material] += quantities[material] ?? 0;
                         }
                         return acc;
                     },
-                    Object.fromEntries(MATERIALS.map(m => [m, 0])) as Record<MaterialType, number>
+                    Object.fromEntries(MATERIALS.map(m => [m, 0])) as Record<string, number>
                 );
 
                 const pending = Object.fromEntries(
@@ -239,9 +182,7 @@ export const FarmService = {
         if (!member) return null;
 
         const now = new Date();
-        const firstDate = member.farms.length > 0
-            ? member.farms[0].createdAt
-            : member.createdAt ?? now;
+        const firstDate = member.createdAt;
 
         const weeks = getWeeksBetween(firstDate, now);
 
@@ -250,9 +191,11 @@ export const FarmService = {
             orderBy: { startsAt: "asc" },
         });
 
+        const MATERIALS = [...new Set([...BUILTIN_MATERIALS, ...requirements.map(r => r.material)])];
+
         const required = Object.fromEntries(
             MATERIALS.map(m => [m, 0])
-        ) as Record<MaterialType, number>;
+        ) as Record<string, number>;
 
         for (const week of weeks) {
             for (const material of MATERIALS) {
@@ -264,12 +207,13 @@ export const FarmService = {
 
         const delivered = member.farms.reduce(
             (acc, farm) => {
+                const quantities = farmQuantities(farm);
                 for (const material of MATERIALS) {
-                    acc[material] += farm[material];
+                    acc[material] += quantities[material] ?? 0;
                 }
                 return acc;
             },
-            Object.fromEntries(MATERIALS.map(m => [m, 0])) as Record<MaterialType, number>
+            Object.fromEntries(MATERIALS.map(m => [m, 0])) as Record<string, number>
         );
 
         const pending = Object.fromEntries(
@@ -301,29 +245,7 @@ export const FarmService = {
             },
         });
 
-        const totalMetal = farms.reduce((acc, f) => acc + f.metal, 0);
-        const totalCopper = farms.reduce((acc, f) => acc + f.copper, 0);
-        const totalRubber = farms.reduce((acc, f) => acc + f.rubber, 0);
-        const totalPlastic = farms.reduce((acc, f) => acc + f.plastic, 0);
-        const totalGlass = farms.reduce((acc, f) => acc + f.glass, 0);
-        const totalSand = farms.reduce((acc, f) => acc + f.sand, 0);
-        const totalPieceWeapon = farms.reduce((acc, f) => acc + f.pieceWeapon, 0);
-        const totalPistolPiece = farms.reduce((acc, f) => acc + f.pistolPiece, 0);
-
-        const total = totalMetal + totalCopper + totalRubber + totalPlastic + totalGlass + totalSand + totalPieceWeapon + totalPistolPiece;
-
-        return {
-            farms,
-            metal: totalMetal,
-            copper: totalCopper,
-            rubber: totalRubber,
-            plastic: totalPlastic,
-            glass: totalGlass,
-            sand: totalSand,
-            pieceWeapon: totalPieceWeapon,
-            pistolPiece: totalPistolPiece,
-            total,
-        };
+        return { farms, ...sumFarmQuantities(farms) };
     },
 
     async userWeekly(memberId: string) {
@@ -341,29 +263,7 @@ export const FarmService = {
             },
         });
 
-        const totalMetal = farms.reduce((acc, f) => acc + f.metal, 0);
-        const totalCopper = farms.reduce((acc, f) => acc + f.copper, 0);
-        const totalRubber = farms.reduce((acc, f) => acc + f.rubber, 0);
-        const totalPlastic = farms.reduce((acc, f) => acc + f.plastic, 0);
-        const totalGlass = farms.reduce((acc, f) => acc + f.glass, 0);
-        const totalSand = farms.reduce((acc, f) => acc + f.sand, 0);
-        const totalPieceWeapon = farms.reduce((acc, f) => acc + f.pieceWeapon, 0);
-        const totalPistolPiece = farms.reduce((acc, f) => acc + f.pistolPiece, 0);
-
-        const total = totalMetal + totalCopper + totalRubber + totalPlastic + totalGlass + totalSand + totalPieceWeapon + totalPistolPiece;
-
-        return {
-            farms,
-            metal: totalMetal,
-            copper: totalCopper,
-            rubber: totalRubber,
-            plastic: totalPlastic,
-            glass: totalGlass,
-            sand: totalSand,
-            pieceWeapon: totalPieceWeapon,
-            pistolPiece: totalPistolPiece,
-            total,
-        };
+        return { farms, ...sumFarmQuantities(farms) };
     },
 
 
@@ -401,10 +301,7 @@ export const FarmService = {
         if (!member) return null;
 
         const now = new Date();
-        const firstDate =
-            member.farms.length > 0
-                ? member.farms[0].createdAt
-                : member.createdAt ?? now;
+        const firstDate = member.createdAt;
 
         const weeks = getWeeksBetween(firstDate, now);
 
@@ -412,19 +309,21 @@ export const FarmService = {
             where: { startsAt: { lte: now } },
             orderBy: { startsAt: "asc" },
         });
-        const deliveredTotal: Record<MaterialType, number> = Object.fromEntries(
+        const MATERIALS = [...new Set([...BUILTIN_MATERIALS, ...requirements.map(r => r.material)])];
+        const deliveredTotal: Record<string, number> = Object.fromEntries(
             MATERIALS.map(m => [m, 0])
         ) as any;
         for (const farm of member.farms) {
+            const quantities = farmQuantities(farm);
             for (const material of MATERIALS) {
-                deliveredTotal[material] += farm[material];
+                deliveredTotal[material] += quantities[material] ?? 0;
             }
         }
 
         const byWeek = [];
         const remainingDelivered = { ...deliveredTotal };
         for (const week of weeks) {
-            const required: Record<MaterialType, number> = Object.fromEntries(
+            const required: Record<string, number> = Object.fromEntries(
                 MATERIALS.map(m => {
                     const meta = requirements
                         .filter(r => r.material === m && r.startsAt <= week)
@@ -433,7 +332,7 @@ export const FarmService = {
                 })
             ) as any;
 
-            const delivered: Record<MaterialType, number> = Object.fromEntries(
+            const delivered: Record<string, number> = Object.fromEntries(
                 MATERIALS.map(m => {
                     const used = Math.min(remainingDelivered[m], required[m]);
                     remainingDelivered[m] -= used;
@@ -441,7 +340,7 @@ export const FarmService = {
                 })
             ) as any;
 
-            const pending: Record<MaterialType, number> = Object.fromEntries(
+            const pending: Record<string, number> = Object.fromEntries(
                 MATERIALS.map(m => [m, required[m] - delivered[m]])
             ) as any;
 
@@ -471,15 +370,19 @@ export const FarmService = {
 };
 
 interface AlterWeeklyMetaDTO {
-    material: MaterialType;
+    material: string;
     weeklyMin: number;
 }
 
-function getWeekStart(date = new Date()) {
-    const d = new Date(date);
-    const day = d.getDay(); // 0 = domingo
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    d.setDate(diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
+async function upsertFarmMember(tx: Prisma.TransactionClient, memberId: string, guildId: string) {
+    await tx.guild.upsert({
+        where: { id: guildId },
+        create: { id: guildId },
+        update: {},
+    });
+    return tx.member.upsert({
+        where: { id_guildId: { id: memberId, guildId } },
+        create: { id: memberId, guildId },
+        update: {},
+    });
 }

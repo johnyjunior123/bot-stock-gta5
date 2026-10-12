@@ -1,6 +1,7 @@
 import { createCommand } from "#base";
 import { ApplicationCommandType, EmbedBuilder } from "discord.js";
 import { FarmService } from "../../../../cache/prisma.service.js";
+import { formatMaterial } from "../../../../functions/utils.js";
 import { FormatDate } from "../../../../functions/format-date.js";
 
 createCommand({
@@ -35,8 +36,9 @@ createCommand({
                 const member = await guild.members.fetch(r.memberId).catch(() => null);
                 const name = member?.nickname ?? member?.user?.username ?? "Desconhecido";
 
-                return `**#${idx + 1}** ${name}\n` +
-                    `Tot: **${r.total}** • M: ${r.metal} • C: ${r.copper} • B: ${r.rubber} • P: ${r.plastic} • V: ${r.glass} • Areia: ${r.sand} • A: ${r.pieceWeapon} • Sub: ${r.pistolPiece}`;
+                const materials = Object.entries(r.quantities)
+                    .map(([material, quantity]) => `${formatMaterial(material)}: ${quantity}`).join(" • ");
+                return (`**#${idx + 1}** ${name}\nTot: **${r.total}** • ${materials}`).slice(0, 550);
             })
         );
 

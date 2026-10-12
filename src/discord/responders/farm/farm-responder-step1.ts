@@ -50,7 +50,7 @@ createResponder({
             return;
         }
 
-        if (!Object.values(session.quantities).some(quantity => quantity > 0)) {
+        if (!Object.values(session.quantities).some(quantity => (quantity ?? 0) > 0)) {
             await interaction.reply({
                 content: "❌ Informe pelo menos uma quantidade maior que zero. Use /entregar-materiais para refazer a entrega.",
                 ephemeral: true,

@@ -15,6 +15,7 @@ model Farm {
     pieceWeapon   Int        @default(0)
     pistolPiece   Int        @default(0)
     dirtyMoney    Int        @default(0)
+    customMaterials Json    @default("{}")
     status        FarmStatus @default(PENDING)
     member        Member     @relation(fields: [memberId, memberGuildId], references: [id, guildId])
     createdAt     DateTime   @default(now())
@@ -25,20 +26,15 @@ model Farm {
     @@map("farms")
 }
 
-enum MaterialType {
-    metal
-    copper
-    rubber
-    plastic
-    glass
-    sand
-    pieceWeapon
-    pistolPiece
+model CustomMaterial {
+    name           String   @id
+    normalizedName String   @unique
+    createdAt      DateTime @default(now())
 }
 
 model FarmRequirement {
     id        Int      @id @default(autoincrement())
-    material  MaterialType
+    material  String
     weeklyMin Int
     startsAt  DateTime
     createdAt DateTime @default(now())

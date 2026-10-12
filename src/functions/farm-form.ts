@@ -1,12 +1,11 @@
-import type { MaterialType } from "../database/prisma/client.js";
 import { formatMaterial } from "./utils.js";
 
-export type FarmRequirement = { material: MaterialType; weeklyMin: number };
+export type FarmRequirement = { material: string; weeklyMin: number };
 
 export function currentFarmRequirements<T extends FarmRequirement & { startsAt: Date }>(
     requirements: T[], now = new Date(),
 ): T[] {
-    const latest = new Map<MaterialType, T>();
+    const latest = new Map<string, T>();
     for (const requirement of requirements) {
         if (requirement.startsAt > now) continue;
         const previous = latest.get(requirement.material);
@@ -30,9 +29,9 @@ export function farmFormPages(requirements: FarmRequirement[]): FarmRequirement[
 }
 
 export function readFarmQuantities(
-    requirements: FarmRequirement[], getValue: (material: MaterialType) => string,
-): Partial<Record<MaterialType, number>> {
-    const quantities: Partial<Record<MaterialType, number>> = {};
+    requirements: FarmRequirement[], getValue: (material: string) => string,
+): Partial<Record<string, number>> {
+    const quantities: Partial<Record<string, number>> = {};
     for (const { material } of requirements) {
         const value = getValue(material).trim();
         const quantity = Number(value);
