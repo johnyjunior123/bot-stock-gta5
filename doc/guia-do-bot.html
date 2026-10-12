@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Guia de uso — Bot Stock GTA 5</title>
+<style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #e7edf2; color: #243447; font: 10.5pt/1.48 "Segoe UI", Arial, sans-serif; }
+.page { width: 210mm; height: 297mm; padding: 17mm 18mm 19mm; margin: 12px auto; background: white; position: relative; break-after: page; }
+.page:last-of-type { break-after: auto; }
+.eyebrow { color: #087c85; font-size: 9pt; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; margin: 0 0 10px; }
+h1 { font-size: 38pt; line-height: 1.09; letter-spacing: -1.8px; color: #142e45; margin: 18px 0; }
+h2 { font-size: 25pt; line-height: 1.15; color: #142e45; margin: 0 0 16px; letter-spacing: -.6px; }
+h3 { font-size: 13pt; color: #142e45; margin: 21px 0 7px; }
+p { margin: 0 0 11px; }
+.lead { font-size: 13pt; color: #506477; line-height: 1.5; }
+.small { font-size: 9pt; color: #536779; }
+.footer { position: absolute; left: 18mm; right: 18mm; bottom: 10mm; display: flex; justify-content: space-between; border-top: 1px solid #dce5eb; padding-top: 8px; color: #617384; font-size: 8pt; }
+.band { background: #142e45; color: white; padding: 20px 23px; margin: 24px 0; border-radius: 8px; }
+.band strong { color: #91e2db; }
+.band p:last-child, .note p:last-child { margin-bottom: 0; }
+.note { border-left: 4px solid #0b8f95; background: #edf7f7; padding: 12px 16px; margin: 16px 0; }
+.caution { border-left-color: #bd741b; background: #fff5e7; }
+.danger { border-left-color: #ba4343; background: #fff0ef; }
+code { font: 9.3pt/1.4 Consolas, "Courier New", monospace; color: #155367; overflow-wrap: anywhere; }
+.example { background: #f2f5f8; border: 1px solid #dce5eb; border-radius: 5px; padding: 10px 13px; margin: 8px 0 12px; }
+.example code { display: block; white-space: normal; }
+table { width: 100%; border-collapse: collapse; margin: 13px 0; font-size: 9.5pt; line-height: 1.38; }
+th { background: #142e45; color: white; text-align: left; padding: 9px 10px; font-weight: 600; }
+td { border-bottom: 1px solid #dce5eb; padding: 9px 10px; vertical-align: top; }
+tbody tr:nth-child(even) { background: #f4f7f9; }
+.commands td:first-child { width: 37%; white-space: nowrap; }
+.commands code { font-size: 9pt; }
+.commands td { padding: 8px 9px; }
+.steps { counter-reset: step; padding: 0; list-style: none; }
+.steps > li { position: relative; padding-left: 40px; margin: 15px 0; }
+.steps > li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; background: #087c85; color: white; border-radius: 50%; width: 26px; height: 26px; text-align: center; line-height: 26px; font-weight: 700; }
+.steps strong { display: block; margin-bottom: 3px; color: #142e45; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.card { border: 1px solid #dce5eb; border-radius: 7px; padding: 15px; }
+.card h3 { margin-top: 0; }
+ul { padding-left: 20px; margin: 8px 0 12px; }
+li { margin-bottom: 5px; }
+.contents { display: grid; grid-template-columns: 1fr auto; gap: 8px; font-size: 10pt; margin: 18px 0; }
+.contents span:nth-child(even) { color: #087c85; font-weight: 700; }
+.compact { font-size: 10pt; line-height: 1.4; }
+.compact p { margin-bottom: 9px; }
+.compact h3 { margin: 17px 0 6px; }
+.compact table { font-size: 9pt; line-height: 1.3; margin: 10px 0; }
+.compact td { padding: 7px 9px; }
+@media print { body { background: white; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .page { margin: 0; } }
+</style>
+</head>
+<body>
+<section class="page">
+  <div class="content">
+    <p class="eyebrow">Manual de uso • Discord • GTA RP</p>
+    <h1>Bot Stock<br>GTA 5</h1>
+    <p class="lead">Comandos e passo a passo para organizar materiais, acompanhar entregas e publicar encomendas e vendas.</p>
+    <div class="band">
+      <p><strong>O fluxo principal</strong></p>
+      <p>Cadastrar usuário → definir metas → entregar materiais com comprovante → aprovar a entrega → consultar resultados.</p>
+    </div>
+    <h3>Comece por aqui</h3>
+    <ol class="steps">
+      <li><strong>Equipe: cadastre a pessoa</strong>Use <code>/criar-canal-farm</code> e selecione o usuário. O bot garante o cadastro no banco e cria o canal privado de farm.</li>
+      <li><strong>Equipe: configure o que deve ser entregue</strong>Use <code>/alterar-valor</code>. Para um material novo, cadastre o nome primeiro com <code>/criar_novo_material</code>.</li>
+      <li><strong>Membro: registre sua entrega</strong>Consulte <code>/meta</code> e use <code>/entregar-materiais</code>. Preencha as quantidades, anexe o comprovante e aguarde a equipe.</li>
+      <li><strong>Equipe: confira e aprove</strong>No canal de farm, use o botão <b>Confirmar Entrega</b>. Só entregas aprovadas entram nos totais e abatem pendências.</li>
+    </ol>
+    <h3>Neste guia</h3>
+    <div class="contents">
+      <span>Resumo dos 13 comandos</span><span>02</span>
+      <span>Cadastro de usuários e configuração de materiais</span><span>03</span>
+      <span>Entrega, aprovação e acompanhamento</span><span>04</span>
+      <span>Como publicar encomendas e vendas</span><span>05</span>
+      <span>Permissões, exclusão e dúvidas frequentes</span><span>06</span>
+    </div>
+    <p class="small">Referência: código local revisado em 12/10/2026. As alterações descritas precisam estar publicadas na instância do bot usada no servidor.</p>
+  </div>
+  <footer class="footer"><span>BOT STOCK GTA 5 · GUIA DE USO</span><span>01 / 06</span></footer>
+</section>
+
+<section class="page">
+  <div class="content">
+    <p class="eyebrow">Consulta rápida</p>
+    <h2>O que cada comando faz</h2>
+    <p>No Discord, digite <b>/</b>, escolha o comando e preencha os campos apresentados. Nos exemplos, substitua <b>@usuário</b> pela pessoa desejada.</p>
+    <table class="commands">
+      <thead><tr><th>Comando / campos</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/criar-canal-farm</code><br><span class="small">usuario</span></td><td>Cadastra o usuário no banco e cria seu canal privado. Se o canal já existe, garante o cadastro sem duplicá-lo.</td></tr>
+        <tr><td><code>/criar_novo_material</code><br><span class="small">nome</span></td><td>Cadastra um material, como Explosivos, para aparecer nas sugestões de <code>/alterar-valor</code>. Não define a meta.</td></tr>
+        <tr><td><code>/alterar-valor</code><br><span class="small">material, qntde</span></td><td>Define ou altera a meta semanal do material a partir da semana atual. Zero desativa sua exigência atual.</td></tr>
+        <tr><td><code>/meta</code></td><td>Mostra os materiais com meta vigente maior que zero e a quantidade necessária de cada um.</td></tr>
+        <tr><td><code>/entregar-materiais</code></td><td>Abre o formulário de entrega, solicita quantidades e comprovante e envia o registro para aprovação.</td></tr>
+        <tr><td><code>/farm</code><br><span class="small">usuario</span></td><td>Consulta entregas aprovadas por material, total geral e últimos sete dias. Veja a observação de período na página 4.</td></tr>
+        <tr><td><code>/ranking</code></td><td>Mostra até dez usuários com maior quantidade total de materiais em entregas aprovadas.</td></tr>
+        <tr><td><code>/pendente</code></td><td>Lista até dez membros com maior pendência acumulada. O resumo ainda exibe apenas os materiais originais.</td></tr>
+        <tr><td><code>/pendente-only</code><br><span class="small">usuario</span></td><td>Mostra quanto falta de cada material para o usuário, incluindo materiais personalizados.</td></tr>
+        <tr><td><code>/pendente-detalhado</code><br><span class="small">usuario</span></td><td>Detalha as quantidades pendentes por semana, considerando metas e entregas aprovadas.</td></tr>
+        <tr><td><code>/zerar</code><br><span class="small">usuario</span></td><td>Exclui o cadastro no servidor atual e as entregas do usuário. Mantém o canal. Leia o cuidado da página 6 antes de usar.</td></tr>
+        <tr><td><code>/encomenda</code><br><span class="small">8 campos · página 5</span></td><td>Calcula o valor e publica o resumo do pedido no canal configurado para encomendas.</td></tr>
+        <tr><td><code>/venda</code><br><span class="small">6 campos · página 5</span></td><td>Calcula o valor e publica o resumo da venda no canal configurado para vendas.</td></tr>
+      </tbody>
+    </table>
+    <p class="small">Todos os campos listados são obrigatórios. Os comandos sem campos abrem diretamente uma consulta ou formulário. Os botões de aprovação ficam na mensagem da entrega.</p>
+  </div>
+  <footer class="footer"><span>COMANDOS</span><span>02 / 06</span></footer>
+</section>
+
+<section class="page">
+  <div class="content">
+    <p class="eyebrow">Passo a passo • Equipe</p>
+    <h2>Prepare o farm</h2>
+    <h3>1. Cadastre o usuário e seu canal</h3>
+    <div class="example"><code>/criar-canal-farm usuario:@usuário</code></div>
+    <p>Selecione um membro do servidor. O cadastro é salvo antes da criação do canal. Se ele já tiver um canal reconhecido pelo bot, o comando confirma o cadastro sem criar outro.</p>
+    <p>O canal permite acesso ao próprio usuário e aos cargos de gerente e administrador configurados. Caso a criação do canal falhe após o cadastro, corrija as permissões e execute o comando novamente.</p>
+    <div class="note"><b>Quando começa a cobrança?</b><br>As pendências contam desde a semana em que o usuário foi cadastrado. A primeira entrega posterior não reinicia essa contagem.</div>
+    <h3>2. Escolha ou cadastre o material</h3>
+    <p>Já existem: <b>Metal, Cobre, Borracha, Plástico, Vidro, Areia, Peça de Arma e Peça de Sub</b>. Para adicionar outro:</p>
+    <div class="example"><code>/criar_novo_material nome:Explosivos</code></div>
+    <p>Use de 1 a 50 caracteres, com letras, números, espaços ou hífens. O bot rejeita nomes reservados e duplicados, inclusive diferenças apenas de maiúsculas, acentos ou espaços repetidos.</p>
+    <h3>3. Defina a quantidade semanal</h3>
+    <div class="example"><code>/alterar-valor material:Explosivos qntde:100</code></div>
+    <p>Digite parte do nome em <b>material</b> e escolha a sugestão. A quantidade precisa ser inteira e não negativa. A meta vale para a semana atual e continua nas próximas até ser alterada.</p>
+    <p>Para retirar o material dos próximos formulários, defina <b>qntde:0</b>. Isso não apaga entregas nem elimina pendências de semanas anteriores. Formulários já abertos mantêm as metas consultadas ao iniciar.</p>
+    <h3>4. Confira o resultado</h3>
+    <div class="example"><code>/meta</code></div>
+    <p>O novo material aparece na lista quando sua meta for maior que zero. Criar o nome sozinho não o torna obrigatório no formulário.</p>
+    <p class="small">Criar materiais e alterar metas exigem o cargo autorizado do bot. O catálogo de materiais e as metas são compartilhados pela instância do bot; não são separados por servidor.</p>
+  </div>
+  <footer class="footer"><span>CADASTRO E METAS</span><span>03 / 06</span></footer>
+</section>
+
+<section class="page">
+  <div class="content">
+    <p class="eyebrow">Passo a passo • Membro e equipe</p>
+    <h2>Entregue e acompanhe</h2>
+    <ol class="steps">
+      <li><strong>Confira a meta</strong>Use <code>/meta</code>. Se não houver materiais exigidos, peça à equipe para configurar uma meta positiva.</li>
+      <li><strong>Abra o formulário</strong>Use <code>/entregar-materiais</code> no servidor em que você possui canal de farm. O formulário solicita os materiais com meta vigente.</li>
+      <li><strong>Informe as quantidades reais</strong>Use números inteiros, sem separadores: <b>1000</b>, por exemplo. Entregas parciais são permitidas; informe <b>0</b> no que não entregou. Pelo menos um material precisa ter quantidade maior que zero.</li>
+      <li><strong>Complete as etapas e anexe o comprovante</strong>Quando houver várias páginas, clique em <b>Continuar</b>. Anexe um comprovante na etapa final. A sessão expira após 20 minutos; depois disso, inicie outra entrega.</li>
+      <li><strong>Aguarde a conferência</strong>A entrega é salva como pendente e publicada no seu canal com as quantidades e o comprovante. Enviar o formulário não aprova a entrega automaticamente.</li>
+    </ol>
+    <div class="grid">
+      <div class="card"><h3>Confirmar Entrega</h3><p>A equipe confere o comprovante e aprova. Os materiais passam a entrar nos totais e no ranking e a abater as pendências.</p></div>
+      <div class="card"><h3>Recusar Entrega</h3><p>A equipe recusa o registro. A entrega recusada não conta nos totais nem abate pendências. Consulte a equipe antes de reenviar.</p></div>
+    </div>
+    <h3>Depois da aprovação</h3>
+    <div class="example">
+      <code>/farm usuario:@usuário</code>
+      <code>/pendente-only usuario:@usuário</code>
+      <code>/pendente-detalhado usuario:@usuário</code>
+    </div>
+    <p><b>Exemplo:</b> com meta de 100 Explosivos nesta semana e nenhuma dívida anterior, uma entrega aprovada de 40 deixa 60 pendentes. Antes da aprovação, a pendência continua em 100.</p>
+    <div class="note caution"><b>Período mostrado em /farm:</b> apesar do título “Esta semana” mostrar segunda a domingo, a consulta atual soma os <b>últimos sete dias</b>. Já as pendências são calculadas por semanas, com início na segunda-feira em UTC.</div>
+  </div>
+  <footer class="footer"><span>ENTREGAS E CONSULTAS</span><span>04 / 06</span></footer>
+</section>
+
+<section class="page compact">
+  <div class="content">
+    <p class="eyebrow">Passo a passo • Operação no GTA RP</p>
+    <h2>Encomendas e vendas</h2>
+    <p>Os dois comandos montam um resumo, calculam valores pela tabela do bot e publicam no canal correspondente. São registros de operações do jogo.</p>
+    <table>
+      <thead><tr><th>Campo</th><th>Como preencher</th><th>Usado em</th></tr></thead>
+      <tbody>
+        <tr><td><b>cliente</b></td><td>Nome, vulgo ou identificação do cliente.</td><td>Ambos</td></tr>
+        <tr><td><b>contato</b></td><td>Contato do personagem no jogo.</td><td>Ambos</td></tr>
+        <tr><td><b>produto</b></td><td>Selecione uma opção oferecida pelo bot.</td><td>Ambos</td></tr>
+        <tr><td><b>quantidade</b></td><td>Número inteiro, a partir de 1.</td><td>Ambos</td></tr>
+        <tr><td><b>dinheiro</b></td><td>Escolha Limpo ou Sujo.</td><td>Ambos</td></tr>
+        <tr><td><b>parceria</b></td><td>Informe se o cliente possui parceria.</td><td>Ambos</td></tr>
+        <tr><td><b>grupo</b></td><td>Gangue, equipe ou Civil.</td><td>Encomenda</td></tr>
+        <tr><td><b>retirada</b></td><td>Texto com a disponibilidade para retirar.</td><td>Encomenda</td></tr>
+      </tbody>
+    </table>
+    <h3>Como fazer uma encomenda</h3>
+    <p>Selecione <code>/encomenda</code>, preencha os oito campos e envie. Confira a confirmação e a mensagem publicada no canal de encomendas.</p>
+    <div class="example"><code>/encomenda cliente:João grupo:Civil contato:555-0100<br>produto:M1911 quantidade:1 parceria:Não dinheiro:Limpo<br>retirada:13/10/2026 à noite</code></div>
+    <h3>Como registrar uma venda</h3>
+    <p>Selecione <code>/venda</code>, preencha os seis campos e envie. O resumo será publicado no canal de vendas, com preço por unidade e valor total.</p>
+    <div class="example"><code>/venda cliente:João contato:555-0100 produto:M1911<br>quantidade:1 dinheiro:Limpo parceria:Sem parceria</code></div>
+    <h3>Produtos e quantidades</h3>
+    <p>Opções atuais: Munição de pistola, Munição de sub, Munição de fuzil, M1911, Five-seven, Skorpion V61, Moeda K-alho e Lavagem.</p>
+    <p>Para munições, o resumo acrescenta <b>k</b> à quantidade informada: 10 aparece como 10k. Para Lavagem, o valor calculado corresponde a <b>21%</b> da quantidade informada. A Moeda K-alho tem preço somente em dinheiro limpo; esse preço é usado mesmo se “Sujo” for selecionado.</p>
+    <div class="note">Esses comandos publicam mensagens. Eles não baixam materiais do farm, não atualizam estoque e não salvam encomendas ou vendas no banco. Um novo material de farm não vira automaticamente um produto de venda.</div>
+  </div>
+  <footer class="footer"><span>ENCOMENDAS E VENDAS</span><span>05 / 06</span></footer>
+</section>
+
+<section class="page compact">
+  <div class="content">
+    <p class="eyebrow">Referência • Administração</p>
+    <h2>Permissões e cuidados</h2>
+    <h3>Quem pode usar?</h3>
+    <p><code>/criar_novo_material</code>, <code>/alterar-valor</code>, <code>/zerar</code> e os botões de aprovação ou recusa exigem o cargo autorizado configurado no bot (<code>ALLOWED_ROLE_ID</code>).</p>
+    <p>Os demais comandos, incluindo <code>/criar-canal-farm</code>, não fazem essa verificação no código atual. Sua disponibilidade também depende das permissões de comandos e canais definidas no Discord.</p>
+    <h3>Excluir um usuário</h3>
+    <div class="example"><code>/zerar usuario:@usuário</code></div>
+    <p>O comando exclui o cadastro no servidor atual e o histórico de entregas do usuário. O canal de farm e as mensagens antigas permanecem no Discord. Não há etapa adicional de confirmação nem função de desfazer.</p>
+    <div class="note danger"><b>Limitação confirmada:</b> a exclusão das entregas filtra apenas o usuário, sem filtrar o servidor. Se a mesma instância do bot atende vários servidores, <code>/zerar</code> pode apagar as entregas dessa pessoa em todos eles. Corrija esse filtro antes de usá-lo nesse cenário.</div>
+    <p>Para cadastrar a pessoa novamente, use <code>/criar-canal-farm</code>. Mesmo que o canal tenha permanecido, o comando cria o cadastro ausente, com uma nova data. Uma nova entrega também pode recriar o cadastro.</p>
+    <h3>Dúvidas frequentes</h3>
+    <table>
+      <thead><tr><th>Mensagem ou situação</th><th>O que fazer</th></tr></thead>
+      <tbody>
+        <tr><td>Usuário não encontrado</td><td>Peça à equipe para executar <code>/criar-canal-farm</code> para essa pessoa.</td></tr>
+        <tr><td>Nenhum material obrigatório</td><td>Configure pelo menos uma meta maior que zero com <code>/alterar-valor</code>.</td></tr>
+        <tr><td>Material novo não aparece</td><td>Digite parte do nome em <code>/alterar-valor</code>, selecione a sugestão e defina a meta. Confira em <code>/meta</code>.</td></tr>
+        <tr><td>Formulário expirado</td><td>Inicie novamente com <code>/entregar-materiais</code>.</td></tr>
+        <tr><td>Entrega salva, mas comprovante não publicado</td><td>Informe à equipe o número da entrega indicado na resposta antes de reenviar.</td></tr>
+        <tr><td>Canal indisponível ou falta de permissão</td><td>A equipe deve conferir os canais e cargos configurados e as permissões do bot.</td></tr>
+      </tbody>
+    </table>
+    <p class="small"><b>Outras limitações atuais:</b> o resumo de <code>/pendente</code> não lista materiais personalizados, embora eles contem na ordenação; consulte <code>/pendente-only</code> ou <code>/pendente-detalhado</code>. Ranking, listagem geral de pendências e totais de farm não são totalmente isolados por servidor. Use esses resultados com esse contexto quando a instância atender vários servidores.</p>
+  </div>
+  <footer class="footer"><span>SUPORTE E ADMINISTRAÇÃO · REVISADO EM 12/10/2026</span><span>06 / 06</span></footer>
+</section>
+<script>
+window.addEventListener('load', () => {
+  const pages = [...document.querySelectorAll('.page')];
+  const checks = pages.map((page, index) => ({
+    page: index + 1,
+    contentBottom: Math.ceil(page.querySelector('.content').getBoundingClientRect().bottom - page.getBoundingClientRect().top),
+    footerTop: Math.floor(page.querySelector('.footer').getBoundingClientRect().top - page.getBoundingClientRect().top),
+    widthOverflow: page.scrollWidth > page.clientWidth,
+  }));
+  const report = document.createElement('script');
+  report.type = 'application/json'; report.id = 'layout-report'; report.textContent = JSON.stringify(checks);
+  document.body.appendChild(report);
+  const preview = Number(new URLSearchParams(location.search).get('preview'));
+  if (preview) pages.forEach((page, index) => { if (index + 1 !== preview) page.style.display = 'none'; });
+});
+</script>
+</body>
+</html>
