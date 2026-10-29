@@ -53,6 +53,9 @@ createCommand({
             });
         }
 
+        const guildMember = await interaction.guild?.members.fetch(user.id).catch(() => null);
+        const displayName = guildMember?.displayName ?? user.globalName ?? user.username;
+
         const description = Object.entries(result.pending)
             .filter(([, value]) => value > 0)
             .map(([material, value]) => `• **${formatMaterial(material)}**: ${value}`)
@@ -61,7 +64,7 @@ createCommand({
         await interaction.reply({
             embeds: [
                 {
-                    title: "📦 Pendências de Farm",
+                    title: `Pendência de Farm - ${displayName}`,
                     description,
                     footer: {
                         text: `Semanas ativas: ${result.weeksActive}`,
